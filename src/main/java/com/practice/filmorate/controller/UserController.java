@@ -3,7 +3,11 @@ package com.practice.filmorate.controller;
 import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.model.User;
 import jakarta.validation.Valid;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.extern.apachecommons.CommonsLog;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -13,9 +17,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 @Slf4j
+@Builder
+@Getter
 public class UserController {
     private final Map<Integer, User> users = new HashMap<>();
-    private int uniqueId = 1;
+    private static int uniqueId = 1;
+
+    public UserController() {
+    }
 
 
     @PostMapping

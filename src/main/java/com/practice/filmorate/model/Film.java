@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Data
+@Builder
 public class Film {
     int id;
 
@@ -22,6 +24,6 @@ public class Film {
 
     LocalDate releaseDate;
 
-    @Positive
+    @Positive(message = "Продолжительность фильма должна быть положительной")
     int duration;
 }
