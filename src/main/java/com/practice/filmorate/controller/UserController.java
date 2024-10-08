@@ -2,6 +2,7 @@ package com.practice.filmorate.controller;
 
 import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.model.User;
+import com.practice.filmorate.service.UserService;
 import jakarta.validation.Valid;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -22,38 +24,44 @@ import java.util.Map;
 public class UserController {
     private final Map<Integer, User> users = new HashMap<>();
     private static int uniqueId = 1;
+    private final UserService userService;
 
-    public UserController() {
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
         log.info("Creating user: {}", user);
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-        user.setId(uniqueId++);
-        users.put(user.getId(), user);
-        return user;
+        return userService.create(user);
     }
 
     @GetMapping
     public Collection<User> findAll() {
         log.info("Finding all users");
-        return users.values();
+        return userService.findAll();
     }
+
+    @GetMapping("/{id}")
+    public User findById(@PathVariable int id) {
+        return userService.findById(id);
+    }
+
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
-        if (!users.containsKey(user.getId())) {
-            throw new NotFoundException("Пользователя с данным идентификатором не существует.");
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
         log.info("Creating new user: {}", user);
-        users.put(user.getId(), user);
-        return user;
+        return userService.update(user);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable int id, @PathVariable int friendId){
+        userService.addfriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> findAllFriends(@PathVariable int id){
+        return userService.findAllFriends(id);
     }
 }

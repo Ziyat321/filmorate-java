@@ -3,6 +3,8 @@ package com.practice.filmorate;
 import com.practice.filmorate.controller.UserController;
 import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.model.User;
+import com.practice.filmorate.service.UserService;
+import com.practice.filmorate.storage.InMemoryUserStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +19,7 @@ class UserControllerTest {
 
     @BeforeEach
     void init() {
-        userController = new UserController();
+        userController = new UserController(new UserService(new InMemoryUserStorage()));
     }
 
     @Test

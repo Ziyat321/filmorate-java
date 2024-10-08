@@ -10,6 +10,8 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Data
@@ -29,4 +31,7 @@ public class User {
 
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     LocalDate birthday;
+
+    @Builder.Default
+    final Set<Integer> friends = new HashSet<>();
 }
