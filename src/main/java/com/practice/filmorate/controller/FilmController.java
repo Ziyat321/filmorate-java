@@ -2,6 +2,9 @@ package com.practice.filmorate.controller;
 
 import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.model.Film;
+import com.practice.filmorate.model.User;
+import com.practice.filmorate.service.FilmService;
+import com.practice.filmorate.service.UserService;
 import jakarta.validation.Valid;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -19,40 +23,51 @@ import java.util.Map;
 @Builder
 @Getter
 public class FilmController {
-    private final Map<Integer, Film> films = new HashMap<>();
-    private static int uniqueId = 1;
+    private final FilmService filmService;
 
-    public FilmController() {}
+
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            throw new IllegalArgumentException("Дата выхода фильма нереалистична.");
-        }
         log.info("Film created: {}", film);
-        film.setId(uniqueId++);
-        films.put(film.getId(), film);
-        return film;
-
+        return filmService.create(film);
     }
 
     @GetMapping
     public Collection<Film> findAll() {
         log.info("Finding all films");
-        return films.values();
+        return filmService.findAll();
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
-        System.out.println(film);
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            throw new IllegalArgumentException("Дата выхода фильма нереалистична.");
-        }
-        if (!films.containsKey(film.getId())) {
-            throw new NotFoundException("Фильм с данным идентификатором не найден.");
-        }
         log.info("Film added: {}", film);
-        films.put(film.getId(), film);
-        return film;
+        return filmService.update(film);
+    }
+
+    @GetMapping("/{id}")
+    public Film findById(@PathVariable int id) {
+        log.info("Finding film by id: {}", id);
+        return filmService.findById(id);
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    public void likeFilm(@PathVariable int id, @PathVariable int userId) {
+        log.info("Liking film with id: {} and user id: {}", id, userId);
+        filmService.likeFilm(id, userId);
+    }
+
+    @DeleteMapping("{id}/like/{userId}")
+    public void unlikeFilm(@PathVariable int id, @PathVariable int userId) {
+        log.info("Unliking film with id: {} and user id: {}", id, userId);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> popularFilms(@RequestParam(required = false) Integer count) {
+        log.info("Getting {} popular films", count);
+        return filmService.popularFilms(count);
     }
 }

@@ -22,8 +22,6 @@ import java.util.Map;
 @Builder
 @Getter
 public class UserController {
-    private final Map<Integer, User> users = new HashMap<>();
-    private static int uniqueId = 1;
     private final UserService userService;
 
     public UserController(UserService userService) {
@@ -45,6 +43,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public User findById(@PathVariable int id) {
+        log.info("Finding user by id: {}", id);
         return userService.findById(id);
     }
 
@@ -57,11 +56,25 @@ public class UserController {
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(@PathVariable int id, @PathVariable int friendId){
+        log.info("Adding friend to user: {}", id);
         userService.addfriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends")
     public List<User> findAllFriends(@PathVariable int id){
+        log.info("Finding all friends for user: {}", id);
         return userService.findAllFriends(id);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void removeFriend(@PathVariable int id,  @PathVariable int friendId) {
+        log.info("Deleting user: {}", id);
+        userService.removeFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> findCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        log.info("Finding common friends for user: {}", id);
+        return userService.findCommonFriends(id, otherId);
     }
 }

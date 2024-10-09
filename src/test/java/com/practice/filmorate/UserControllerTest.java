@@ -47,7 +47,7 @@ class UserControllerTest {
                 .build();
 
         userController.create(user);
-        User createdUser = userController.getUsers().get(1);
+        User createdUser = userController.findAll().stream().toList().get(0);
 
         assertEquals(user, createdUser);
     }
@@ -61,7 +61,7 @@ class UserControllerTest {
                 .login("login")
                 .build();
         userController.create(user);
-        Collection<User> expectedUsers = userController.getUsers().values();
+        Collection<User> expectedUsers = userController.findAll();
 
         Collection<User> actualUsers = userController.findAll();
 
@@ -110,7 +110,7 @@ class UserControllerTest {
                 .build();
 
         userController.update(newUser);
-        User updatedUser = userController.getUsers().get(1);
+        User updatedUser = userController.findAll().stream().toList().get(0);
 
         assertEquals(newUser, updatedUser);
     }

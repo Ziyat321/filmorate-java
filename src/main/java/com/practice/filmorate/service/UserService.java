@@ -8,52 +8,69 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
 
-    public User create(User user){
+    public User create(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
         return userStorage.create(user);
     }
 
-    public User update(User user){
+    public User update(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
         return userStorage.update(user);
     }
 
-    public User findById(int id){
+    public User findById(int id) {
         return userStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден"));
     }
 
-    public Collection<User> findAll(){
+    public Collection<User> findAll() {
         return userStorage.findAll();
     }
 
-    public void addfriend(int userId, int otherUserId){
-        //TODO
-        User user = ;
+    public void addfriend(int userId, int otherUserId) {
+        if (userId == otherUserId) {
+            throw new IllegalArgumentException("Нельзя добавить самого себя в друзья");
+        }
+        User user = findById(userId);
+        User otherUser = findById(otherUserId);
         user.getFriends().add(otherUserId);
+        otherUser.getFriends().add(userId);
     }
 
-    public void removeFriend(int userId, int otherUserId){
-        //TODO
-
+    public void removeFriend(int userId, int otherUserId) {
+        User user = findById(userId);
+        User otherUser = findById(otherUserId);
+        user.getFriends().remove(otherUserId);
+        otherUser.getFriends().remove(userId);
     }
 
-    public List<User> findAllFriends(int userId){
-        //TODO
-        User user = ;
+    public List<User> findAllFriends(int userId) {
+        User user = findById(userId);
 
         return user.getFriends().stream()
-                .map(friendId -> findById(friendId))
+                .map(this::findById)
+                .toList();
+    }
+
+    public List<User> findCommonFriends(int userId, int otherUserId) {
+        User user = findById(userId);
+        User otherUser = findById(otherUserId);
+        Set<Integer> commonFriends = user.getFriends();
+        commonFriends.retainAll(otherUser.getFriends());
+
+        return commonFriends.stream()
+                .map(this::findById)
                 .toList();
     }
 }

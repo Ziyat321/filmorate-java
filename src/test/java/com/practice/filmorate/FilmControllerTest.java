@@ -3,6 +3,8 @@ package com.practice.filmorate;
 import com.practice.filmorate.controller.FilmController;
 import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.model.Film;
+import com.practice.filmorate.service.FilmService;
+import com.practice.filmorate.storage.InMemoryFilmStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +19,7 @@ public class FilmControllerTest {
 
     @BeforeEach
     public void init() {
-        filmController = new FilmController();
+        filmController = new FilmController(new FilmService(new InMemoryFilmStorage()));
     }
 
     @Test
@@ -46,7 +48,7 @@ public class FilmControllerTest {
                 .build();
 
         filmController.create(film);
-        Film createdFilm = filmController.getFilms().get(1);
+        Film createdFilm = filmController.findAll().stream().toList().get(1);
 
         assertEquals(film, createdFilm);
     }
@@ -60,7 +62,7 @@ public class FilmControllerTest {
                 .duration(90)
                 .build();
         filmController.create(film);
-        Collection<Film> expectedFilms = filmController.getFilms().values();
+        Collection<Film> expectedFilms = filmController.findAll();
 
         Collection<Film> actualFilms = filmController.findAll();
 
@@ -77,8 +79,8 @@ public class FilmControllerTest {
                 .build();
         filmController.create(film);
         Film newFilm = Film.builder()
-                .id(2)
-                .name("film2")
+                .id(5)
+                .name("film")
                 .description("description")
                 .releaseDate(LocalDate.of(1895, 12, 29))
                 .duration(90)
@@ -101,7 +103,7 @@ public class FilmControllerTest {
                 .build();
         filmController.create(film);
         Film newFilm = Film.builder()
-                .id(1)
+                .id(2)
                 .name("film2")
                 .description("description")
                 .releaseDate(LocalDate.of(1895, 12, 29))
@@ -109,7 +111,7 @@ public class FilmControllerTest {
                 .build();
 
         filmController.update(newFilm);
-        Film updatedFilm = filmController.getFilms().get(1);
+        Film updatedFilm = filmController.findAll().stream().toList().get(1);
 
         assertEquals(newFilm, updatedFilm);
     }
