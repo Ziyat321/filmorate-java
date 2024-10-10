@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -28,5 +29,5 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительной")
     int duration;
 
-    final Set<Integer> likes;
+    final Set<Integer> likes = new HashSet<>();
 }

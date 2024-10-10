@@ -1,34 +1,23 @@
 package com.practice.filmorate.controller;
 
-import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.model.Film;
-import com.practice.filmorate.model.User;
 import com.practice.filmorate.service.FilmService;
-import com.practice.filmorate.service.UserService;
 import jakarta.validation.Valid;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/films")
 @Slf4j
-@Builder
-@Getter
+@RequiredArgsConstructor
 public class FilmController {
     private final FilmService filmService;
 
-
-    public FilmController(FilmService filmService) {
-        this.filmService = filmService;
-    }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
@@ -63,10 +52,11 @@ public class FilmController {
     @DeleteMapping("{id}/like/{userId}")
     public void unlikeFilm(@PathVariable int id, @PathVariable int userId) {
         log.info("Unliking film with id: {} and user id: {}", id, userId);
+        filmService.unlikeFilm(id, userId);
     }
 
     @GetMapping("/popular")
-    public List<Film> popularFilms(@RequestParam(required = false) Integer count) {
+    public List<Film> popularFilms(@RequestParam(defaultValue = "10") Integer count) {
         log.info("Getting {} popular films", count);
         return filmService.popularFilms(count);
     }

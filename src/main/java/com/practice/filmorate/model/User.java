@@ -32,6 +32,5 @@ public class User {
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     LocalDate birthday;
 
-    @Builder.Default
     final Set<Integer> friends = new HashSet<>();
 }

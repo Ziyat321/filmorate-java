@@ -1,6 +1,7 @@
 package com.practice.filmorate.service;
 
 import com.practice.filmorate.exception.NotFoundException;
+import com.practice.filmorate.exception.ValidationException;
 import com.practice.filmorate.model.User;
 import com.practice.filmorate.storage.UserStorage;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +41,7 @@ public class UserService {
 
     public void addfriend(int userId, int otherUserId) {
         if (userId == otherUserId) {
-            throw new IllegalArgumentException("Нельзя добавить самого себя в друзья");
+            throw new ValidationException("Нельзя добавить самого себя в друзья");
         }
         User user = findById(userId);
         User otherUser = findById(otherUserId);
