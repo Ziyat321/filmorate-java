@@ -31,11 +31,10 @@ public class UserService {
     }
 
     public User findById(int id) {
-        return userStorage.findById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден"));
+        return userStorage.findById(id);
     }
 
-    public Collection<User> findAll() {
+    public List<User> findAll() {
         return userStorage.findAll();
     }
 

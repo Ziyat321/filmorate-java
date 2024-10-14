@@ -12,13 +12,16 @@ public class InMemoryFilmStorage implements FilmStorage {
     private int uniqueId = 1;
 
     @Override
-    public Collection<Film> findAll() {
-        return films.values();
+    public List<Film> findAll() {
+        return films.values().stream().toList();
     }
 
     @Override
-    public Optional<Film> findById(int id) {
-        return Optional.ofNullable(films.get(id));
+    public Film findById(int id) {
+        return films.values().stream()
+                .filter(f -> f.getId() == id)
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Фильма с данным " + id + " не существует"));
     }
 
     @Override

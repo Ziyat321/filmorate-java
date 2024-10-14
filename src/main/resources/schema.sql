@@ -1,3 +1,17 @@
+drop table if exists films_genres;
+drop table if exists films_likes;
+drop table if exists friends;
+drop table if exists genres;
+drop table if exists films;
+drop table if exists users;
+drop table if exists mpa;
+
+
+create table if not exists mpa(
+                                  id serial primary key ,
+                                  name varchar not null
+);
+
 create table if not exists films
 (
     id           serial primary key,
@@ -16,10 +30,6 @@ create table if not exists genres
     name varchar not null
 );
 
-create table if not exists mpa(
-                                  id serial,
-                                  name varchar not null
-);
 
 create table if not exists films_genres(
                                            id serial primary key,
@@ -32,9 +42,9 @@ create table if not exists films_genres(
 create table if not exists users
 (
     id    serial primary key,
-    email varchar not null
-        constraint email_check check ( email like '%.@%'),
+    email varchar not null,
     login  varchar not null,
+    name varchar not null,
     birthday date not null
 );
 

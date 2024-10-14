@@ -12,13 +12,16 @@ public class InMemoryUserStorage implements UserStorage {
     private int uniqueId = 1;
 
     @Override
-    public Collection<User> findAll() {
-        return users.values();
+    public List<User> findAll() {
+        return users.values().stream().toList();
     }
 
     @Override
-    public Optional<User> findById(int id) {
-        return Optional.ofNullable(users.get(id));
+    public User findById(int id) {
+        return users.values().stream()
+                .filter(user -> user.getId() == id)
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Пользователя с данным " + id + " не существует"));
     }
 
     @Override

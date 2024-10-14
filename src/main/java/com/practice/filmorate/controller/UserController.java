@@ -31,7 +31,7 @@ public class UserController {
     }
 
     @GetMapping
-    public Collection<User> findAll() {
+    public List<User> findAll() {
         log.info("Finding all users");
         return userService.findAll();
     }

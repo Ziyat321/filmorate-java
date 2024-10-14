@@ -26,7 +26,7 @@ public class FilmController {
     }
 
     @GetMapping
-    public Collection<Film> findAll() {
+    public List<Film> findAll() {
         log.info("Finding all films");
         return filmService.findAll();
     }

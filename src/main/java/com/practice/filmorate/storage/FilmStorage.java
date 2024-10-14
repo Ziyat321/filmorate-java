@@ -3,12 +3,13 @@ package com.practice.filmorate.storage;
 import com.practice.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface FilmStorage {
-    Collection<Film> findAll();
+    List<Film> findAll();
 
-    Optional<Film> findById(int id);
+    Film findById(int id);
 
     Film create(Film user);
 
