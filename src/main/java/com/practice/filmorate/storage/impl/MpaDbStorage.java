@@ -2,6 +2,7 @@ package com.practice.filmorate.storage.impl;
 
 import com.practice.filmorate.model.Mpa;
 import com.practice.filmorate.storage.MpaStorage;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;

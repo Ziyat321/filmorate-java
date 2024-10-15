@@ -85,8 +85,12 @@ public class FilmDbStorage implements FilmStorage {
         film.setReleaseDate(releaseDate);
         film.setDuration(duration);
         film.setMpa(new Mpa(mpaId, mpaName));
-        film.getGenres().add(new Genre(genreId, genre));
-        film.getLikes().add(userId);
+        if(genreId != 0) {   // добавить жанр если существует
+            film.getGenres().add(new Genre(genreId, genre));
+        }
+        if(userId != 0) {   // добавить лайк пользователя если существует
+            film.getLikes().add(userId);
+        }
     }
 
     @Override
@@ -111,8 +115,12 @@ public class FilmDbStorage implements FilmStorage {
                 int genreId = rowSet.getInt("genre_id");
                 String genre = rowSet.getString("genre");
                 int userId = rowSet.getInt("user_id");
-                film.getGenres().add(new Genre(genreId, genre));
-                film.getLikes().add(userId);
+                if(genreId != 0) {   // добавить жанр если существует
+                    film.getGenres().add(new Genre(genreId, genre));
+                }
+                if(userId != 0) {   // добавить лайк пользователя если существует
+                    film.getLikes().add(userId);
+                }
             }
         }
         films.add(film);
@@ -139,8 +147,12 @@ public class FilmDbStorage implements FilmStorage {
                 int genreId = rowSet.getInt("genre_id");
                 String genre = rowSet.getString("genre");
                 int userId = rowSet.getInt("user_id");
-                film.getGenres().add(new Genre(genreId, genre));
-                film.getLikes().add(userId);
+                if(genreId != 0) {   // добавить жанр если существует
+                    film.getGenres().add(new Genre(genreId, genre));
+                }
+                if(userId != 0) {   // добавить лайк пользователя если существует
+                    film.getLikes().add(userId);
+                }
             }
         }
         return film;

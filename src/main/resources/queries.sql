@@ -13,7 +13,7 @@ from films as f
          left join films_genres as fg
                    on f.id = fg.film_id
          left join genres as g
-                    on fg.genre_id = g.id
+                   on fg.genre_id = g.id
          left join films_likes as fl on f.id = fl.film_id
 order by film_id, genre_id, user_id;
 
@@ -30,13 +30,14 @@ select f.id           as film_id,
        g.name         as genre,
        fl.user_id     as user_id
 from films as f
-         left join films_genres as fg
-                    on f.id = fg.film_id
-         inner join genres as g
-                    on fg.genre_id = g.id
          inner join mpa on f.mpa_id = mpa.id
+         left join films_genres as fg
+                   on f.id = fg.film_id
+         left join genres as g
+                   on fg.genre_id = g.id
          left join films_likes as fl on f.id = fl.film_id
-where fg.film_id = 1
+where fg.film_id=1
 order by film_id, genre_id, user_id;
+
 
 

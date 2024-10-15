@@ -5,8 +5,10 @@ import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.model.User;
 import com.practice.filmorate.service.UserService;
 import com.practice.filmorate.storage.InMemoryUserStorage;
+import com.practice.filmorate.storage.impl.UserDbStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -19,7 +21,7 @@ class UserControllerTest {
 
     @BeforeEach
     void init() {
-        userController = new UserController(new UserService(new InMemoryUserStorage()));
+        userController = new UserController(new UserService(new UserDbStorage(new JdbcTemplate())));
     }
 
     @Test

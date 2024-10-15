@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-public class InMemoryUserStorage implements UserStorage {
+public abstract class InMemoryUserStorage implements UserStorage {
     private final Map<Integer, User> users = new HashMap<>();
     private int uniqueId = 1;
 

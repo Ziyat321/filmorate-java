@@ -4,12 +4,17 @@ import com.practice.filmorate.controller.FilmController;
 import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.model.Film;
 import com.practice.filmorate.service.FilmService;
+import com.practice.filmorate.storage.FilmStorage;
+import com.practice.filmorate.storage.MpaStorage;
 import com.practice.filmorate.storage.impl.FilmDbStorage;
 import com.practice.filmorate.storage.InMemoryUserStorage;
+import com.practice.filmorate.storage.impl.MpaDbStorage;
+import com.practice.filmorate.storage.impl.UserDbStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Date;
 
@@ -21,8 +26,9 @@ public class FilmControllerTest {
 
     @BeforeEach
     public void init() {
-        filmController = new FilmController(new FilmService(new FilmDbStorage(new JdbcTemplate()),
-                new InMemoryUserStorage()));
+        filmController = new FilmController(new FilmService(new FilmDbStorage(new JdbcTemplate(),
+                new MpaDbStorage(new JdbcTemplate())),
+                new UserDbStorage(new JdbcTemplate())));
     }
 
     @Test
@@ -30,7 +36,7 @@ public class FilmControllerTest {
         Film film = Film.builder()
                 .name("film")
                 .description("description")
-                .releaseDate(new Date(1890, 1, 1))
+                .releaseDate(LocalDate.of(1890, 1, 1))
                 .duration(90)
                 .build();
         String expectedMessage = "Дата выхода фильма нереалистична.";
@@ -46,7 +52,7 @@ public class FilmControllerTest {
         Film film = Film.builder()
                 .name("film")
                 .description("description")
-                .releaseDate(new Date(1895, 12, 29))
+                .releaseDate(LocalDate.of(1895, 12, 29))
                 .duration(90)
                 .build();
 
@@ -61,7 +67,7 @@ public class FilmControllerTest {
         Film film = Film.builder()
                 .name("film")
                 .description("description")
-                .releaseDate(new Date(1895, 12, 29))
+                .releaseDate(LocalDate.of(1895, 12, 29))
                 .duration(90)
                 .build();
         filmController.create(film);
@@ -77,7 +83,7 @@ public class FilmControllerTest {
         Film film = Film.builder()
                 .name("film")
                 .description("description")
-                .releaseDate(new Date(1895, 12, 29))
+                .releaseDate(LocalDate.of(1895, 12, 29))
                 .duration(90)
                 .build();
         filmController.create(film);
@@ -85,7 +91,7 @@ public class FilmControllerTest {
                 .id(5)
                 .name("film")
                 .description("description")
-                .releaseDate(new Date(1895, 12, 29))
+                .releaseDate(LocalDate.of(1895, 12, 29))
                 .duration(90)
                 .build();
         String expectedMessage = "Фильм с данным идентификатором не найден.";
@@ -101,7 +107,7 @@ public class FilmControllerTest {
         Film film = Film.builder()
                 .name("film")
                 .description("description")
-                .releaseDate(new Date(1895, 12, 29))
+                .releaseDate(LocalDate.of(1895, 12, 29))
                 .duration(90)
                 .build();
         filmController.create(film);
@@ -109,7 +115,7 @@ public class FilmControllerTest {
                 .id(2)
                 .name("film2")
                 .description("description")
-                .releaseDate(new Date(1895, 12, 29))
+                .releaseDate(LocalDate.of(1895, 12, 29))
                 .duration(90)
                 .build();
 
