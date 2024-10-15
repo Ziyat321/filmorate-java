@@ -1,7 +1,7 @@
-package com.practice.filmorate.storage;
+package com.practice.filmorate.storage.impl;
 
-import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.model.Mpa;
+import com.practice.filmorate.storage.MpaStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -23,11 +24,11 @@ public class MpaDbStorage implements MpaStorage {
     }
 
     @Override
-    public Mpa findById(int id) {
+    public Optional<Mpa> findById(int id) {
         String sql = SELECT + " where id = ?";
-        return jdbcTemplate.queryForStream(sql, this::mapRow, id)
-                .findFirst()
-                .orElseThrow(()->new NotFoundException("Рейтинга с данным " + id + " не существует"));
+        return jdbcTemplate.query(sql, this::mapRow, id)
+                .stream()
+                .findFirst();
     }
 
     private Mpa mapRow(ResultSet rs, int rowNum) throws SQLException {

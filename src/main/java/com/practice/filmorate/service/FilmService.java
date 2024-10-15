@@ -1,16 +1,13 @@
 package com.practice.filmorate.service;
 
-import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.exception.ValidationException;
 import com.practice.filmorate.model.Film;
-import com.practice.filmorate.storage.FilmDbStorage;
-import com.practice.filmorate.storage.FilmStorage;
+import com.practice.filmorate.storage.impl.FilmDbStorage;
 import com.practice.filmorate.storage.UserStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -20,7 +17,7 @@ public class FilmService {
     private final UserStorage userStorage;
 
     public Film create(Film film) {
-        if (film.getReleaseDate().compareTo(new Date(1895, 12, 28)) < 0) {
+        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             throw new ValidationException("Дата выхода фильма нереалистична.");
         }
 
@@ -28,7 +25,7 @@ public class FilmService {
     }
 
     public Film update(Film film) {
-        if (film.getReleaseDate().compareTo(new Date(1895, 12, 28)) < 0) {
+        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             throw new ValidationException("Дата выхода фильма нереалистична.");
         }
         return filmDbStorage.update(film);

@@ -1,7 +1,8 @@
-package com.practice.filmorate.storage;
+package com.practice.filmorate.storage.impl;
 
 import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.model.Genre;
+import com.practice.filmorate.storage.GenreStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,8 @@ public class GenreDbStorage implements GenreStorage {
     @Override
     public Genre findById(int id) {
         String sql = SELECT + " where id=?";
-        return jdbcTemplate.queryForStream(sql, this::mapRow, id)
+        return jdbcTemplate.query(sql, this::mapRow, id)
+                .stream()
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Жанра с данным " + id + " не существует"));
     }

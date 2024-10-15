@@ -4,14 +4,12 @@ import com.practice.filmorate.controller.FilmController;
 import com.practice.filmorate.exception.NotFoundException;
 import com.practice.filmorate.model.Film;
 import com.practice.filmorate.service.FilmService;
-import com.practice.filmorate.storage.FilmDbStorage;
-import com.practice.filmorate.storage.InMemoryFilmStorage;
+import com.practice.filmorate.storage.impl.FilmDbStorage;
 import com.practice.filmorate.storage.InMemoryUserStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Date;
 

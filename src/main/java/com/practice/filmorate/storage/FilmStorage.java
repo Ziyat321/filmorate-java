@@ -11,7 +11,7 @@ public interface FilmStorage {
 
     Film findById(int id);
 
-    Film create(Film user);
+    Film create(Film film);
 
-    Film update(Film user);
+    Film update(Film film);
 }

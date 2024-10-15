@@ -1,22 +1,27 @@
-package com.practice.filmorate.storage;
+package com.practice.filmorate.storage.impl;
 
 import com.practice.filmorate.exception.NotFoundException;
+import com.practice.filmorate.exception.ValidationException;
 import com.practice.filmorate.model.Film;
+import com.practice.filmorate.model.Genre;
 import com.practice.filmorate.model.Mpa;
+import com.practice.filmorate.storage.FilmStorage;
+import com.practice.filmorate.storage.MpaStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
-public class FilmDbStorage implements FilmStorage{
+public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final MpaStorage mpaStorage;
 
     private final static String SELECT = """
             select f.id           as film_id,
@@ -28,16 +33,14 @@ public class FilmDbStorage implements FilmStorage{
                    mpa.name       as mpa,
                    g.id           as genre_id,
                    g.name         as genre,
-                   u.id           as user_id,
-                   u.name         as user_name
+                   fl.user_id     as user_id
             from films as f
-                     inner join films_genres as fg
-                                on f.id = fg.film_id
-                     inner join genres as g
-                                on fg.genre_id = g.id
                      inner join mpa on f.mpa_id = mpa.id
-                     inner join films_likes as fl on f.id = fl.film_id
-                     inner join users as u on fl.user_id = u.id
+                     left join films_genres as fg
+                                on f.id = fg.film_id
+                     left join genres as g
+                                on fg.genre_id = g.id
+                     left join films_likes as fl on f.id = fl.film_id
             order by film_id, genre_id, user_id;
             """;
 
@@ -51,16 +54,14 @@ public class FilmDbStorage implements FilmStorage{
                    mpa.name       as mpa,
                    g.id           as genre_id,
                    g.name         as genre,
-                   u.id           as user_id,
-                   u.name         as user_name
+                   fl.user_id     as user_id
             from films as f
-                     inner join films_genres as fg
-                                on f.id = fg.film_id
-                     inner join genres as g
-                                on fg.genre_id = g.id
                      inner join mpa on f.mpa_id = mpa.id
-                     inner join films_likes as fl on f.id = fl.film_id
-                     inner join users as u on fl.user_id = u.id
+                     left join films_genres as fg
+                                on f.id = fg.film_id
+                     left join genres as g
+                                on fg.genre_id = g.id
+                     left join films_likes as fl on f.id = fl.film_id
             where fg.film_id=?
             order by film_id, genre_id, user_id;
             """;
@@ -70,11 +71,12 @@ public class FilmDbStorage implements FilmStorage{
         int filmId = rowSet.getInt("film_id");
         String filmName = rowSet.getString("film");
         String description = rowSet.getString("description");
-        Date releaseDate = rowSet.getDate("release_date");
+        LocalDate releaseDate = rowSet.getDate("release_date").toLocalDate();
         int duration = rowSet.getInt("duration");
         int mpaId = rowSet.getInt("mpa_id");
         String mpaName = rowSet.getString("mpa");
         int genreId = rowSet.getInt("genre_id");
+        String genre = rowSet.getString("genre");
         int userId = rowSet.getInt("user_id");
 
         film.setId(filmId);
@@ -83,7 +85,7 @@ public class FilmDbStorage implements FilmStorage{
         film.setReleaseDate(releaseDate);
         film.setDuration(duration);
         film.setMpa(new Mpa(mpaId, mpaName));
-        film.getGenres().add(genreId);
+        film.getGenres().add(new Genre(genreId, genre));
         film.getLikes().add(userId);
     }
 
@@ -98,37 +100,22 @@ public class FilmDbStorage implements FilmStorage{
         while (rowSet.next()) {
             int filmId = rowSet.getInt("film_id");
             if (filmId != filmIdPrev) {   // забиваем инфу для нового фильма
-                if(film.getId() != 0){
+                if (film.getId() != 0) {
                     films.add(film);
                 }
                 film = new Film();
-
-                String filmName = rowSet.getString("film");
-                String description = rowSet.getString("description");
-                Date releaseDate = rowSet.getDate("release_date");
-                int duration = rowSet.getInt("duration");
-                int mpaId = rowSet.getInt("mpa_id");
-                String mpaName = rowSet.getString("mpa");
-                int genreId = rowSet.getInt("genre_id");
-                int userId = rowSet.getInt("user_id");
-
-                film.setId(filmId);
-                film.setName(filmName);
-                film.setDescription(description);
-                film.setReleaseDate(releaseDate);
-                film.setDuration(duration);
-                film.setMpa(new Mpa(mpaId, mpaName));
-                film.getGenres().add(genreId);
-                film.getLikes().add(userId);
+                filmSetInfo(rowSet, film);
 
                 filmIdPrev = filmId;
             } else {                                         // добиваем инфу по жанрам и лайкам для уже созданного фильма
                 int genreId = rowSet.getInt("genre_id");
+                String genre = rowSet.getString("genre");
                 int userId = rowSet.getInt("user_id");
-                film.getGenres().add(genreId);
+                film.getGenres().add(new Genre(genreId, genre));
                 film.getLikes().add(userId);
             }
         }
+        films.add(film);
         return films;
     }
 
@@ -146,42 +133,67 @@ public class FilmDbStorage implements FilmStorage{
             int filmId = rowSet.getInt("film_id");
             if (filmId != filmIdPrev) {
                 filmSetInfo(rowSet, film);
-//                String filmName = rowSet.getString("film");
-//                String description = rowSet.getString("description");
-//                Date releaseDate = rowSet.getDate("release_date");
-//                int duration = rowSet.getInt("duration");
-//                int mpaId = rowSet.getInt("mpa_id");
-//                String mpaName = rowSet.getString("mpa");
-//                int genreId = rowSet.getInt("genre_id");
-//                int userId = rowSet.getInt("user_id");
-//
-//                film.setId(filmId);
-//                film.setName(filmName);
-//                film.setDescription(description);
-//                film.setReleaseDate(releaseDate);
-//                film.setDuration(duration);
-//                film.setMpa(new Mpa(mpaId, mpaName));
-//                film.getGenres().add(genreId);
-//                film.getLikes().add(userId);
 
                 filmIdPrev = filmId;
             } else {
                 int genreId = rowSet.getInt("genre_id");
+                String genre = rowSet.getString("genre");
                 int userId = rowSet.getInt("user_id");
-                film.getGenres().add(genreId);
+                film.getGenres().add(new Genre(genreId, genre));
                 film.getLikes().add(userId);
             }
         }
         return film;
     }
 
+    @Transactional
     @Override
-    public Film create(Film user) {
-        return null;
+    public Film create(Film film) {
+        mpaStorage.findById(film.getMpa().getId())
+                .orElseThrow(() -> new ValidationException("..."));
+
+        SimpleJdbcInsert insert = new SimpleJdbcInsert(jdbcTemplate)
+                .withTableName("films")
+                .usingGeneratedKeyColumns("id");
+        Map<String, Object> params = Map.of(
+                "name", film.getName(),
+                "description", film.getDescription(),
+                "release_date", film.getReleaseDate(),
+                "duration", film.getDuration(),
+                "mpa_id", film.getMpa().getId()
+        );
+
+        int id = insert.executeAndReturnKey(params).intValue();
+        film.setId(id);
+
+        Set<Genre> filmGenres = film.getGenres();
+        String sql = """
+                insert into films_genres(film_id, genre_id)
+                values (?, ?)
+                """;
+        for (Genre filmGenre : filmGenres) {
+            jdbcTemplate.update(sql, id, filmGenre.getId());
+        }
+        return film;
     }
 
     @Override
-    public Film update(Film user) {
-        return null;
+    public Film update(Film film) {
+        String sql = """
+                update films
+                set name = ?,
+                    description = ?,
+                    release_date = ?,
+                    duration = ?, 
+                    mpa_id = ?
+                where id = ?
+                """;
+
+        int result = jdbcTemplate.update(sql, film.getName(), film.getDescription(),
+                film.getReleaseDate(), film.getDuration(),
+                film.getMpa().getId(), film.getId());
+
+        if(result == 0) throw new NotFoundException("...");
+        return film;
     }
 }

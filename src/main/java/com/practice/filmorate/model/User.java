@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
@@ -16,6 +17,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Data
 @Builder
+@AllArgsConstructor
 public class User {
     int id;
 
@@ -31,6 +33,4 @@ public class User {
 
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     LocalDate birthday;
-
-    final Set<Integer> friends = new HashSet<>();
 }

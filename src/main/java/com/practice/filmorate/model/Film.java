@@ -1,6 +1,7 @@
 package com.practice.filmorate.model;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -25,15 +26,15 @@ public class Film {
     @Size(max = 200, message = "Максимальная длинна сообщения 200 символов")
     String description;
 
-    Date releaseDate;
+    LocalDate releaseDate;
 
     @Positive(message = "Продолжительность фильма должна быть положительной")
     int duration;
 
-    @NotBlank(message = "Рейтинг должен присутствовать")
+    @NotNull(message = "Рейтинг должен присутствовать")
     Mpa mpa;
 
-    final Set<Integer> genres = new HashSet<>();
+    final Set<Genre> genres = new HashSet<>();
 
     final Set<Integer> likes = new HashSet<>();
 }

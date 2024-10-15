@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -39,38 +40,40 @@ public class UserService {
     }
 
     public void addfriend(int userId, int otherUserId) {
-        if (userId == otherUserId) {
-            throw new ValidationException("Нельзя добавить самого себя в друзья");
-        }
-        User user = findById(userId);
-        User otherUser = findById(otherUserId);
-        user.getFriends().add(otherUserId);
-        otherUser.getFriends().add(userId);
+//        if (userId == otherUserId) {
+//            throw new ValidationException("Нельзя добавить самого себя в друзья");
+//        }
+//        User user = findById(userId);
+//        User otherUser = findById(otherUserId);
+//        user.getFriends().add(otherUserId);
+//        otherUser.getFriends().add(userId);
     }
 
     public void removeFriend(int userId, int otherUserId) {
-        User user = findById(userId);
-        User otherUser = findById(otherUserId);
-        user.getFriends().remove(otherUserId);
-        otherUser.getFriends().remove(userId);
+//        User user = findById(userId);
+//        User otherUser = findById(otherUserId);
+//        user.getFriends().remove(otherUserId);
+//        otherUser.getFriends().remove(userId);
     }
 
     public List<User> findAllFriends(int userId) {
-        User user = findById(userId);
-
-        return user.getFriends().stream()
-                .map(this::findById)
-                .toList();
+        return Collections.emptyList();
+//        User user = findById(userId);
+//
+//        return user.getFriends().stream()
+//                .map(this::findById)
+//                .toList();
     }
 
     public List<User> findCommonFriends(int userId, int otherUserId) {
-        User user = findById(userId);
-        User otherUser = findById(otherUserId);
-        Set<Integer> commonFriends = user.getFriends();
-        commonFriends.retainAll(otherUser.getFriends());
-
-        return commonFriends.stream()
-                .map(this::findById)
-                .toList();
+        return Collections.emptyList();
+//        User user = findById(userId);
+//        User otherUser = findById(otherUserId);
+//        Set<Integer> commonFriends = user.getFriends();
+//        commonFriends.retainAll(otherUser.getFriends());
+//
+//        return commonFriends.stream()
+//                .map(this::findById)
+//                .toList();
     }
 }

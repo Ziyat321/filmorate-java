@@ -2,9 +2,9 @@ package com.practice.filmorate.storage;
 
 import com.practice.filmorate.model.User;
 
-import java.util.Collection;
+
 import java.util.List;
-import java.util.Optional;
+
 
 public interface UserStorage {
     List<User> findAll();
@@ -14,4 +14,9 @@ public interface UserStorage {
     User create(User user);
 
     User update(User user);
+
+    void addFriend(int userId, int friendId);
+    void removeFriend(int userId, int friendId);
+    List<User> findAllFriends(int userId);
+    List<User> findAllCommonFriends(int userId, int friendId);
 }
