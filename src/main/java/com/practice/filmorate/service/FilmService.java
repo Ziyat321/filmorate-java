@@ -40,22 +40,14 @@ public class FilmService {
     }
 
     public void likeFilm(int filmId, int userId) {
-        Film film = findById(filmId);
-        userStorage.findById(userId);
-        film.getLikes().add(userId);
+        filmStorage.likeFilm(filmId, userId);
     }
 
     public void unlikeFilm(int filmId, int userId) {
-        Film film = findById(filmId);
-        userStorage.findById(userId);
-        film.getLikes().remove(userId);
+        filmStorage.unlikeFilm(filmId, userId);
     }
 
     public List<Film> popularFilms(Integer count) {
-
-        return filmStorage.findAll().stream()
-                .sorted((o1, o2) -> Integer.compare(o2.getLikes().size(), o1.getLikes().size()))
-                .limit(count)
-                .toList();
+        return filmStorage.popularFilms(count);
     }
 }

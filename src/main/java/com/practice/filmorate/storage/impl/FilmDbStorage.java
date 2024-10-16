@@ -7,6 +7,7 @@ import com.practice.filmorate.model.Genre;
 import com.practice.filmorate.model.Mpa;
 import com.practice.filmorate.storage.FilmStorage;
 import com.practice.filmorate.storage.MpaStorage;
+import com.practice.filmorate.storage.UserStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -22,6 +23,7 @@ import java.util.*;
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final MpaStorage mpaStorage;
+    private final UserStorage userStorage;
 
     private final static String SELECT = """
             select f.id           as film_id,
@@ -85,10 +87,22 @@ public class FilmDbStorage implements FilmStorage {
         film.setReleaseDate(releaseDate);
         film.setDuration(duration);
         film.setMpa(new Mpa(mpaId, mpaName));
-        if(genreId != 0) {   // добавить жанр если существует
+        if (genreId != 0) {   // добавить жанр если существует
             film.getGenres().add(new Genre(genreId, genre));
         }
-        if(userId != 0) {   // добавить лайк пользователя если существует
+        if (userId != 0) {   // добавить лайк пользователя если существует
+            film.getLikes().add(userId);
+        }
+    }
+
+    private void filmUpdateInfo(SqlRowSet rowSet, Film film) {
+        int genreId = rowSet.getInt("genre_id");
+        String genre = rowSet.getString("genre");
+        int userId = rowSet.getInt("user_id");
+        if (genreId != 0) {   // добавить жанр если существует
+            film.getGenres().add(new Genre(genreId, genre));
+        }
+        if (userId != 0) {   // добавить лайк пользователя если существует
             film.getLikes().add(userId);
         }
     }
@@ -109,18 +123,9 @@ public class FilmDbStorage implements FilmStorage {
                 }
                 film = new Film();
                 filmSetInfo(rowSet, film);
-
                 filmIdPrev = filmId;
             } else {                                         // добиваем инфу по жанрам и лайкам для уже созданного фильма
-                int genreId = rowSet.getInt("genre_id");
-                String genre = rowSet.getString("genre");
-                int userId = rowSet.getInt("user_id");
-                if(genreId != 0) {   // добавить жанр если существует
-                    film.getGenres().add(new Genre(genreId, genre));
-                }
-                if(userId != 0) {   // добавить лайк пользователя если существует
-                    film.getLikes().add(userId);
-                }
+                filmUpdateInfo(rowSet, film);
             }
         }
         films.add(film);
@@ -141,18 +146,9 @@ public class FilmDbStorage implements FilmStorage {
             int filmId = rowSet.getInt("film_id");
             if (filmId != filmIdPrev) {
                 filmSetInfo(rowSet, film);
-
                 filmIdPrev = filmId;
             } else {
-                int genreId = rowSet.getInt("genre_id");
-                String genre = rowSet.getString("genre");
-                int userId = rowSet.getInt("user_id");
-                if(genreId != 0) {   // добавить жанр если существует
-                    film.getGenres().add(new Genre(genreId, genre));
-                }
-                if(userId != 0) {   // добавить лайк пользователя если существует
-                    film.getLikes().add(userId);
-                }
+                filmUpdateInfo(rowSet, film);
             }
         }
         return film;
@@ -162,7 +158,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         mpaStorage.findById(film.getMpa().getId())
-                .orElseThrow(() -> new ValidationException("..."));
+                .orElseThrow(() -> new ValidationException(
+                        "Рейтинга с данным " + film.getMpa().getId() + " не существует"));
 
         SimpleJdbcInsert insert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("films")
@@ -196,7 +193,7 @@ public class FilmDbStorage implements FilmStorage {
                 set name = ?,
                     description = ?,
                     release_date = ?,
-                    duration = ?, 
+                    duration = ?,
                     mpa_id = ?
                 where id = ?
                 """;
@@ -205,7 +202,42 @@ public class FilmDbStorage implements FilmStorage {
                 film.getReleaseDate(), film.getDuration(),
                 film.getMpa().getId(), film.getId());
 
-        if(result == 0) throw new NotFoundException("...");
+        if (result == 0) throw new NotFoundException("Фильма с данным " + film.getId() + " не существует");
         return film;
+    }
+
+    @Override
+    public List<Film> popularFilms(Integer count) {
+        return findAll().stream()
+                .sorted((film1, film2) -> Integer.compare(film2.getLikes().size(), film1.getLikes().size()))
+                .limit(count)
+                .toList();
+    }
+
+    @Override
+    public void likeFilm(int filmId, int userId) {
+        userStorage.findById(userId);
+        Film film = findById(filmId);
+        if (!film.getLikes().contains(userId)) {
+            String sql = """
+                    insert into films_likes(film_id, user_id)
+                    values (?, ?)
+                    """;
+            jdbcTemplate.update(sql, filmId, userId);
+        }
+    }
+
+    @Override
+    public void unlikeFilm(int filmId, int userId) {
+        userStorage.findById(userId);
+        Film film = findById(filmId);
+        if (film.getLikes().contains(userId)) {
+            String sql = """
+                    delete from films_likes
+                    where film_id = ?
+                    and user_id = ?;
+                    """;
+            jdbcTemplate.update(sql, filmId, userId);
+        }
     }
 }

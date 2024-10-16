@@ -72,28 +72,90 @@ public class UserDbStorage implements UserStorage {
                 user.getBirthday(),
                 user.getId());
 
-        if(result == 0) throw new NotFoundException("...");
+        if(result == 0) throw new NotFoundException("Пользователя с данным " + user.getId() + " не существует");
         return user;
     }
 
     @Override
     public void addFriend(int userId, int friendId) {
-
+        findById(userId);
+        findById(friendId);
+        String sqlSelect = """
+                select *
+                from friends
+                where friend1 = ?
+                  and friend2 = ?;
+                """;
+        String sqlInsert = """
+                    insert into friends (friend1, friend2)
+                    values (?, ?);
+                    """;
+        if(!jdbcTemplate.queryForRowSet(sqlSelect, userId, friendId).next()){
+            jdbcTemplate.update(sqlInsert, userId, friendId);
+        }
+        if(!jdbcTemplate.queryForRowSet(sqlSelect, friendId, userId).next()){
+            jdbcTemplate.update(sqlInsert, friendId, userId);
+        }
     }
 
     @Override
     public void removeFriend(int userId, int friendId) {
-
+        findById(userId);
+        findById(friendId);
+        String sqlDelete = """
+                delete from friends
+                where friend1 = ?
+                and friend2 = ?;
+                """;
+        jdbcTemplate.update(sqlDelete, userId, friendId);
+        jdbcTemplate.update(sqlDelete, friendId, userId);
     }
 
     @Override
     public List<User> findAllFriends(int userId) {
-        return List.of();
+        findById(userId);
+        String sql = """
+                select friend2 as id,
+                       u.email as email,
+                       u.login as login,
+                       u.name as name,
+                       u.birthday as birthday
+                from friends as f
+                         inner join users as u
+                                    on u.id = f.friend2
+                where friend1 = ?
+                order by id;
+                """;
+        return jdbcTemplate.query(sql, this::mapRow, userId);
     }
 
     @Override
-    public List<User> findAllCommonFriends(int userId, int friendId) {
-        return List.of();
+    public List<User> findAllCommonFriends(int userId, int otherUserId) {
+        findById(userId);
+        findById(otherUserId);
+        String sql = """
+                select friend2    as id,
+                       u.email    as email,
+                       u.login    as login,
+                       u.name     as name,
+                       u.birthday as birthday
+                from friends as f
+                         inner join users as u
+                                    on u.id = f.friend2
+                where friend1 = ?
+                intersect
+                select friend2    as id,
+                       u.email    as email,
+                       u.login    as login,
+                       u.name     as name,
+                       u.birthday as birthday
+                from friends as f
+                         inner join users as u
+                                    on u.id = f.friend2
+                where friend1 = ?
+                order by id;
+                """;
+        return jdbcTemplate.query(sql, this::mapRow, userId, otherUserId);
     }
 
     private User mapRow(ResultSet rs, int rowNum) throws SQLException {

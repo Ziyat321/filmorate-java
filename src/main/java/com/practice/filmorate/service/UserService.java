@@ -39,41 +39,22 @@ public class UserService {
         return userStorage.findAll();
     }
 
-    public void addfriend(int userId, int otherUserId) {
-//        if (userId == otherUserId) {
-//            throw new ValidationException("Нельзя добавить самого себя в друзья");
-//        }
-//        User user = findById(userId);
-//        User otherUser = findById(otherUserId);
-//        user.getFriends().add(otherUserId);
-//        otherUser.getFriends().add(userId);
+    public void addFriend(int userId, int friendId) {
+        if (userId == friendId) {
+            throw new ValidationException("Нельзя добавить самого себя в друзья");
+        }
+        userStorage.addFriend(userId, friendId);
     }
 
-    public void removeFriend(int userId, int otherUserId) {
-//        User user = findById(userId);
-//        User otherUser = findById(otherUserId);
-//        user.getFriends().remove(otherUserId);
-//        otherUser.getFriends().remove(userId);
+    public void removeFriend(int userId, int friendId) {
+        userStorage.removeFriend(userId, friendId);
     }
 
     public List<User> findAllFriends(int userId) {
-        return Collections.emptyList();
-//        User user = findById(userId);
-//
-//        return user.getFriends().stream()
-//                .map(this::findById)
-//                .toList();
+        return userStorage.findAllFriends(userId);
     }
 
-    public List<User> findCommonFriends(int userId, int otherUserId) {
-        return Collections.emptyList();
-//        User user = findById(userId);
-//        User otherUser = findById(otherUserId);
-//        Set<Integer> commonFriends = user.getFriends();
-//        commonFriends.retainAll(otherUser.getFriends());
-//
-//        return commonFriends.stream()
-//                .map(this::findById)
-//                .toList();
+    public List<User> findAllCommonFriends(int userId, int otherUserId) {
+        return userStorage.findAllCommonFriends(userId, otherUserId);
     }
 }

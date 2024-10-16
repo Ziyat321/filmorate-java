@@ -27,7 +27,7 @@ public class FilmControllerTest {
     @BeforeEach
     public void init() {
         filmController = new FilmController(new FilmService(new FilmDbStorage(new JdbcTemplate(),
-                new MpaDbStorage(new JdbcTemplate())),
+                new MpaDbStorage(new JdbcTemplate()), new UserDbStorage(new JdbcTemplate())),
                 new UserDbStorage(new JdbcTemplate())));
     }
 

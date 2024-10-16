@@ -52,7 +52,7 @@ public class UserController {
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(@PathVariable int id, @PathVariable int friendId){
         log.info("Adding friend to user: {}", id);
-        userService.addfriend(id, friendId);
+        userService.addFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends")
@@ -68,8 +68,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> findCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+    public List<User> findAllCommonFriends(@PathVariable int id, @PathVariable int otherId) {
         log.info("Finding common friends for user: {}", id);
-        return userService.findCommonFriends(id, otherId);
+        return userService.findAllCommonFriends(id, otherId);
     }
 }
