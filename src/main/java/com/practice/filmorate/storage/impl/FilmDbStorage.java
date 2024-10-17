@@ -15,6 +15,8 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -69,8 +71,6 @@ public class FilmDbStorage implements FilmStorage {
             """;
 
 
-
-
     @Override
     public List<Film> findAll() {
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(SELECT);
@@ -101,9 +101,8 @@ public class FilmDbStorage implements FilmStorage {
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(SELECT_BY_ID, id);
 
 
-
-        boolean present =  rowSet.next();
-        if(!present) throw new NotFoundException("Фильма с данным " + id + " не существует");
+        boolean present = rowSet.next();
+        if (!present) throw new NotFoundException("Фильма с данным " + id + " не существует");
         int filmIdPrev = 0;
         Film film = new Film();
         while (present) {
@@ -175,10 +174,111 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> popularFilms(Integer count) {
         // todo order by sql
-        return findAll().stream()
-                .sorted((film1, film2) -> Integer.compare(film2.getLikes().size(), film1.getLikes().size()))
-                .limit(count)
+//        return findAll().stream()
+//                .sorted((film1, film2) -> Integer.compare(film2.getLikes().size(), film1.getLikes().size()))
+//                .limit(count)
+//                .toList();
+        String sql = """
+                select f.id                       as film_id,
+                       f.name                     as film,
+                       f.description              as description,
+                       f.release_date             as release_date,
+                       f.duration                 as duration,
+                       mpa.id                     as mpa_id,
+                       mpa.name                   as mpa,
+                       count(distinct fl.user_id) as likes_number
+                from films as f
+                         inner join mpa on f.mpa_id = mpa.id
+                         left join films_genres as fg
+                                   on f.id = fg.film_id
+                         left join genres as g
+                                   on fg.genre_id = g.id
+                         left join films_likes as fl on f.id = fl.film_id
+                group by f.id, mpa.id
+                order by likes_number desc
+                limit ?;
+                """;
+        List<Film> popularFilmsSorted = jdbcTemplate.query(sql, this::mapRow, count)
+                .stream()
+                .sorted((film1, film2) -> Integer.compare(film1.getId(), film2.getId()))
                 .toList();
+        List<Integer> popularFilmsIdsOrderedAsc = popularFilmsSorted.stream()
+                .mapToInt(Film::getId)
+                .boxed().toList();
+
+        StringBuilder stringBuilder = new StringBuilder(); //добавляем жанры
+        stringBuilder
+                .append("select f.id as film_id,\n")
+                .append("f.name as film,\n")
+                .append("g.id as genre_id,\n")
+                .append("g.name as genre\n")
+                .append("from films as f\n")
+                .append("left join films_genres as fg\n")
+                .append("on f.id = fg.film_id\n")
+                .append("left join genres as g\n")
+                .append("on fg.genre_id = g.id\n")
+                .append("where f.id in (");
+        for (int i = 0; i < popularFilmsIdsOrderedAsc.size(); i++) {
+            if (i == popularFilmsIdsOrderedAsc.size() - 1) {
+                stringBuilder
+                        .append(popularFilmsIdsOrderedAsc.get(i))
+                        .append(")\n")
+                        .append("order by f.id;");
+            } else {
+                stringBuilder
+                        .append(popularFilmsIdsOrderedAsc.get(i))
+                        .append(", ");
+            }
+        }
+        sql = stringBuilder.toString();
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql);
+
+        boolean present = rowSet.next();
+        for (Film film : popularFilmsSorted) {
+            while (present) {
+                if (rowSet.getInt("film_id") == film.getId()) {
+                    int genreId = rowSet.getInt("genre_id");
+                    String genreName = rowSet.getString("genre_name");
+                    film.getGenres().add(new Genre(genreId, genreName));
+                    present = rowSet.next();
+                } else break;
+            }
+        }
+
+        stringBuilder = new StringBuilder(); //добавляем лайки
+        stringBuilder
+                .append("select f.id as film_id,\n")
+                .append("f.name as film,\n")
+                .append("fl.user_id as user_id\n")
+                .append("from films as f\n")
+                .append("left join films_likes as fl on f.id = fl.film_id\n")
+                .append("where f.id in (");
+        for (int i = 0; i < popularFilmsIdsOrderedAsc.size(); i++) {
+            if (i == popularFilmsIdsOrderedAsc.size() - 1) {
+                stringBuilder
+                        .append(popularFilmsIdsOrderedAsc.get(i))
+                        .append(")\n")
+                        .append("order by f.id;");
+            } else {
+                stringBuilder
+                        .append(popularFilmsIdsOrderedAsc.get(i))
+                        .append(", ");
+            }
+        }
+        sql = stringBuilder.toString();
+
+        rowSet = jdbcTemplate.queryForRowSet(sql);
+        present = rowSet.next();
+        for (Film film : popularFilmsSorted) {
+            while (present) {
+                if (rowSet.getInt("film_id") == film.getId()) {
+                    int userId = rowSet.getInt("user_id");
+                    film.getLikes().add(userId);
+                    present = rowSet.next();
+                } else break;
+            }
+        }
+        return popularFilmsSorted;
     }
 
     @Override
@@ -244,5 +344,16 @@ public class FilmDbStorage implements FilmStorage {
         if (userId != 0) {   // добавить лайк пользователя если существует
             film.getLikes().add(userId);
         }
+    }
+
+    private Film mapRow(ResultSet rs, int rowNum) throws SQLException {
+        int id = rs.getInt("film_id");
+        String name = rs.getString("film");
+        String description = rs.getString("description");
+        LocalDate releaseDate = rs.getDate("release_date").toLocalDate();
+        int duration = rs.getInt("duration");
+        int mpaId = rs.getInt("mpa_id");
+        String mpaName = rs.getString("mpa");
+        return new Film(id, name, description, releaseDate, duration, new Mpa(mpaId, mpaName));
     }
 }
