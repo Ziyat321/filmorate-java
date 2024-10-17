@@ -64,48 +64,12 @@ public class FilmDbStorage implements FilmStorage {
                      left join genres as g
                                 on fg.genre_id = g.id
                      left join films_likes as fl on f.id = fl.film_id
-            where fg.film_id=?
+            where f.id=?
             order by film_id, genre_id, user_id;
             """;
 
 
-    private void filmSetInfo(SqlRowSet rowSet, Film film) {
-        int filmId = rowSet.getInt("film_id");
-        String filmName = rowSet.getString("film");
-        String description = rowSet.getString("description");
-        LocalDate releaseDate = rowSet.getDate("release_date").toLocalDate();
-        int duration = rowSet.getInt("duration");
-        int mpaId = rowSet.getInt("mpa_id");
-        String mpaName = rowSet.getString("mpa");
-        int genreId = rowSet.getInt("genre_id");
-        String genre = rowSet.getString("genre");
-        int userId = rowSet.getInt("user_id");
 
-        film.setId(filmId);
-        film.setName(filmName);
-        film.setDescription(description);
-        film.setReleaseDate(releaseDate);
-        film.setDuration(duration);
-        film.setMpa(new Mpa(mpaId, mpaName));
-        if (genreId != 0) {   // добавить жанр если существует
-            film.getGenres().add(new Genre(genreId, genre));
-        }
-        if (userId != 0) {   // добавить лайк пользователя если существует
-            film.getLikes().add(userId);
-        }
-    }
-
-    private void filmUpdateInfo(SqlRowSet rowSet, Film film) {
-        int genreId = rowSet.getInt("genre_id");
-        String genre = rowSet.getString("genre");
-        int userId = rowSet.getInt("user_id");
-        if (genreId != 0) {   // добавить жанр если существует
-            film.getGenres().add(new Genre(genreId, genre));
-        }
-        if (userId != 0) {   // добавить лайк пользователя если существует
-            film.getLikes().add(userId);
-        }
-    }
 
     @Override
     public List<Film> findAll() {
@@ -134,15 +98,16 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film findById(int id) {
-        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(SELECT_BY_ID);
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(SELECT_BY_ID, id);
 
-        if (!rowSet.next()) {
-            throw new NotFoundException("Фильма с данным " + id + " не существует");
-        }
 
+
+        boolean present =  rowSet.next();
+        if(!present) throw new NotFoundException("Фильма с данным " + id + " не существует");
         int filmIdPrev = 0;
         Film film = new Film();
-        while (rowSet.next()) {
+        while (present) {
+
             int filmId = rowSet.getInt("film_id");
             if (filmId != filmIdPrev) {
                 filmSetInfo(rowSet, film);
@@ -150,6 +115,7 @@ public class FilmDbStorage implements FilmStorage {
             } else {
                 filmUpdateInfo(rowSet, film);
             }
+            present = rowSet.next();
         }
         return film;
     }
@@ -208,6 +174,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> popularFilms(Integer count) {
+        // todo order by sql
         return findAll().stream()
                 .sorted((film1, film2) -> Integer.compare(film2.getLikes().size(), film1.getLikes().size()))
                 .limit(count)
@@ -238,6 +205,44 @@ public class FilmDbStorage implements FilmStorage {
                     and user_id = ?;
                     """;
             jdbcTemplate.update(sql, filmId, userId);
+        }
+    }
+
+    private void filmSetInfo(SqlRowSet rowSet, Film film) {
+        int filmId = rowSet.getInt("film_id");
+        String filmName = rowSet.getString("film");
+        String description = rowSet.getString("description");
+        LocalDate releaseDate = rowSet.getDate("release_date").toLocalDate();
+        int duration = rowSet.getInt("duration");
+        int mpaId = rowSet.getInt("mpa_id");
+        String mpaName = rowSet.getString("mpa");
+        int genreId = rowSet.getInt("genre_id");
+        String genre = rowSet.getString("genre");
+        int userId = rowSet.getInt("user_id");
+
+        film.setId(filmId);
+        film.setName(filmName);
+        film.setDescription(description);
+        film.setReleaseDate(releaseDate);
+        film.setDuration(duration);
+        film.setMpa(new Mpa(mpaId, mpaName));
+        if (genreId != 0) {   // добавить жанр если существует
+            film.getGenres().add(new Genre(genreId, genre));
+        }
+        if (userId != 0) {   // добавить лайк пользователя если существует
+            film.getLikes().add(userId);
+        }
+    }
+
+    private void filmUpdateInfo(SqlRowSet rowSet, Film film) {
+        int genreId = rowSet.getInt("genre_id");
+        String genre = rowSet.getString("genre");
+        int userId = rowSet.getInt("user_id");
+        if (genreId != 0) {   // добавить жанр если существует
+            film.getGenres().add(new Genre(genreId, genre));
+        }
+        if (userId != 0) {   // добавить лайк пользователя если существует
+            film.getLikes().add(userId);
         }
     }
 }

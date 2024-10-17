@@ -93,9 +93,9 @@ public class UserDbStorage implements UserStorage {
         if(!jdbcTemplate.queryForRowSet(sqlSelect, userId, friendId).next()){
             jdbcTemplate.update(sqlInsert, userId, friendId);
         }
-        if(!jdbcTemplate.queryForRowSet(sqlSelect, friendId, userId).next()){
-            jdbcTemplate.update(sqlInsert, friendId, userId);
-        }
+//        if(!jdbcTemplate.queryForRowSet(sqlSelect, friendId, userId).next()){
+//            jdbcTemplate.update(sqlInsert, friendId, userId);
+//        }
     }
 
     @Override
@@ -108,7 +108,7 @@ public class UserDbStorage implements UserStorage {
                 and friend2 = ?;
                 """;
         jdbcTemplate.update(sqlDelete, userId, friendId);
-        jdbcTemplate.update(sqlDelete, friendId, userId);
+//        jdbcTemplate.update(sqlDelete, friendId, userId);
     }
 
     @Override

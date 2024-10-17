@@ -14,15 +14,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @Slf4j
-@Builder
-@Getter
+
 public class UserController {
     private final UserService userService;
 
     public UserController(UserService userService) {
         this.userService = userService;
     }
-
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
@@ -41,7 +39,6 @@ public class UserController {
         log.info("Finding user by id: {}", id);
         return userService.findById(id);
     }
-
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
