@@ -125,10 +125,6 @@ select f.id                       as film_id,
        count(distinct fl.user_id) as likes_number
 from films as f
          inner join mpa on f.mpa_id = mpa.id
-         left join films_genres as fg
-                   on f.id = fg.film_id
-         left join genres as g
-                   on fg.genre_id = g.id
          left join films_likes as fl on f.id = fl.film_id
 group by f.id, mpa.id
 order by likes_number desc
@@ -144,7 +140,7 @@ from films as f
                    on f.id = fg.film_id
          left join genres as g
                    on fg.genre_id = g.id
-where f.id in (3, 1, 2)
+where f.id in (7, 8, 6)
 order by f.id;
 
 select f.id       as film_id,

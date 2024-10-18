@@ -19,6 +19,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -189,22 +191,15 @@ public class FilmDbStorage implements FilmStorage {
                        count(distinct fl.user_id) as likes_number
                 from films as f
                          inner join mpa on f.mpa_id = mpa.id
-                         left join films_genres as fg
-                                   on f.id = fg.film_id
-                         left join genres as g
-                                   on fg.genre_id = g.id
                          left join films_likes as fl on f.id = fl.film_id
                 group by f.id, mpa.id
                 order by likes_number desc
                 limit ?;
                 """;
-        List<Film> popularFilmsSorted = jdbcTemplate.query(sql, this::mapRow, count)
-                .stream()
-                .sorted((film1, film2) -> Integer.compare(film1.getId(), film2.getId()))
-                .toList();
-        List<Integer> popularFilmsIdsOrderedAsc = popularFilmsSorted.stream()
-                .mapToInt(Film::getId)
-                .boxed().toList();
+        List<Film> result = jdbcTemplate.query(sql, this::mapRow, count);
+        Map<Integer, Film> filmMap = result.stream()
+                .collect(Collectors.toMap(Film::getId, Function.identity()));
+
 
         StringBuilder stringBuilder = new StringBuilder(); //добавляем жанры
         stringBuilder
@@ -218,67 +213,30 @@ public class FilmDbStorage implements FilmStorage {
                 .append("left join genres as g\n")
                 .append("on fg.genre_id = g.id\n")
                 .append("where f.id in (");
-        for (int i = 0; i < popularFilmsIdsOrderedAsc.size(); i++) {
-            if (i == popularFilmsIdsOrderedAsc.size() - 1) {
-                stringBuilder
-                        .append(popularFilmsIdsOrderedAsc.get(i))
-                        .append(")\n")
-                        .append("order by f.id;");
+
+        Iterator<Film> iterator = result.iterator();
+        while (iterator.hasNext()) {
+            Film film = iterator.next();
+            stringBuilder.append(film.getId());
+
+            if (iterator.hasNext()) {
+                stringBuilder.append(", ");
             } else {
-                stringBuilder
-                        .append(popularFilmsIdsOrderedAsc.get(i))
-                        .append(", ");
+                stringBuilder.append(")\n").append("order by f.id;");
             }
         }
+
         sql = stringBuilder.toString();
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql);
 
-        boolean present = rowSet.next();
-        for (Film film : popularFilmsSorted) {
-            while (present) {
-                if (rowSet.getInt("film_id") == film.getId()) {
-                    int genreId = rowSet.getInt("genre_id");
-                    String genreName = rowSet.getString("genre_name");
-                    film.getGenres().add(new Genre(genreId, genreName));
-                    present = rowSet.next();
-                } else break;
-            }
+        while (rowSet.next()) {
+            int filmId = rowSet.getInt("film_id");
+            Film film = filmMap.get(filmId);
+            Genre genre = new Genre(rowSet.getInt("genre_id"), rowSet.getString("genre"));
+            film.getGenres().add(genre);
         }
 
-        stringBuilder = new StringBuilder(); //добавляем лайки
-        stringBuilder
-                .append("select f.id as film_id,\n")
-                .append("f.name as film,\n")
-                .append("fl.user_id as user_id\n")
-                .append("from films as f\n")
-                .append("left join films_likes as fl on f.id = fl.film_id\n")
-                .append("where f.id in (");
-        for (int i = 0; i < popularFilmsIdsOrderedAsc.size(); i++) {
-            if (i == popularFilmsIdsOrderedAsc.size() - 1) {
-                stringBuilder
-                        .append(popularFilmsIdsOrderedAsc.get(i))
-                        .append(")\n")
-                        .append("order by f.id;");
-            } else {
-                stringBuilder
-                        .append(popularFilmsIdsOrderedAsc.get(i))
-                        .append(", ");
-            }
-        }
-        sql = stringBuilder.toString();
-
-        rowSet = jdbcTemplate.queryForRowSet(sql);
-        present = rowSet.next();
-        for (Film film : popularFilmsSorted) {
-            while (present) {
-                if (rowSet.getInt("film_id") == film.getId()) {
-                    int userId = rowSet.getInt("user_id");
-                    film.getLikes().add(userId);
-                    present = rowSet.next();
-                } else break;
-            }
-        }
-        return popularFilmsSorted;
+        return result;
     }
 
     @Override
